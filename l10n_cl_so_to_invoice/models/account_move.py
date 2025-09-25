@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
+# See LICENSE file for full copyright and licensing details.
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 import logging
@@ -14,25 +14,19 @@ class AccountMove(models.Model):
         moves = super(AccountMove, self).create(vals_list)
         for move in moves:
             _logger.debug("Iniciando proceso de creación de factura %s", move.name)
-            
+
             # Buscar el pedido de venta asociado
             sale_order = self.env['sale.order'].search([('name', '=', move.invoice_origin)], limit=1)
-            
+
             if not sale_order:
                 _logger.warning("No se encontró el pedido de venta asociado con el número %s", move.invoice_origin)
                 continue
-                
+
             # Verificar si el pedido de venta tiene un número origin
             if not sale_order.origin:
                 _logger.warning("El pedido de venta %s no tiene un valor origin configurado", sale_order.name)
-                # Registrar la advertencia sin interrumpir el proceso de creación
-                message = "No se pudo encontrar el número de orden de compra en el pedido de venta. La factura se creará sin referencia de documento."
-                _logger.warning(message)
-                # Aquí puedes agregar lógica adicional para notificar al usuario si es necesario
                 continue
-                
-            _logger.debug("Pedido de venta encontrado: %s, con origin: %s", sale_order.name, sale_order.origin)
-            
+
             # Crear la referencia de documento
             try:
                 # Buscar el tipo de documento 801 por código
@@ -51,9 +45,8 @@ class AccountMove(models.Model):
                 # Crear la referencia de documento
                 self.env['l10n_cl.account.invoice.reference'].create(reference_vals)
                 _logger.debug("Referencia de documento creada exitosamente")
-                
+
             except Exception as e:
                 _logger.error("Error al crear la referencia de documento: %s", str(e))
-                
-        return moves
 
+        return moves
